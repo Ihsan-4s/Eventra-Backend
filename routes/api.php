@@ -35,7 +35,7 @@ Route::get('/events/{slug}', [EventController::class, 'show']);
 Route::middleware(['auth:sanctum', 'role:organizer'])->prefix('organizer')->group(function () {
     Route::get('/events', [EventController::class, 'myEvents']);
     Route::post('/events', [EventController::class, 'store']);
-    Route::post('/events/{event}', [EventController::class, 'update']);
+    Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
     Route::post('/events/{event}/check-in', [AttendanceController::class, 'checkIn']);
     Route::get('/events/{event}/attendances', [AttendanceController::class, 'index']);
