@@ -11,6 +11,16 @@ use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
+    public function show(string $slug)
+    {
+        $event = Event::with(['category', 'user'])
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        return response()->json(['event' => $event]);
+    }
+
     public function myEvents(Request $request)
     {
         $events = Event::with('category')
