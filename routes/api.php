@@ -32,6 +32,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 // events
 Route::get('/events/{slug}', [EventController::class, 'show']);
 
+
 Route::middleware(['auth:sanctum', 'role:organizer'])->prefix('organizer')->group(function () {
     Route::get('/events', [EventController::class, 'myEvents']);
     Route::post('/events', [EventController::class, 'store']);
