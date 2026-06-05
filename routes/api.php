@@ -29,8 +29,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::delete('/categories/{eventCategory}', [EventCategoryController::class, 'destroy']);
 });
 
-// events
-Route::get('/events/{slug}', [EventController::class, 'show']);
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/events', [EventController::class, 'adminIndex']);
+    Route::get('/dashboard', [DashboardController::class, 'admin']);
+});
 
 
 Route::middleware(['auth:sanctum', 'role:organizer'])->prefix('organizer')->group(function () {
@@ -42,18 +44,15 @@ Route::middleware(['auth:sanctum', 'role:organizer'])->prefix('organizer')->grou
     Route::get('/events/{event}/attendances', [AttendanceController::class, 'index']);
     Route::get('/dashboard', [DashboardController::class, 'organizer']);
     Route::get('/events/{event}/analytics', [DashboardController::class, 'eventAnalytics']);
-    Route::get('/events/{event}/export/registrations/pdf',  [ExportController::class, 'registrationsPdf']);
-    Route::get('/events/{event}/export/registrations/xlsx', [ExportController::class, 'registrationsXlsx']);
-    Route::get('/events/{event}/export/payments/pdf',       [ExportController::class, 'paymentsPdf']);
-    Route::get('/events/{event}/export/payments/xlsx',      [ExportController::class, 'paymentsXlsx']);
+    Route::get('/events/{event}/registrations', [RegistrationController::class, 'index']);
+    Route::get('/events/{event}/export/registrations/pdf',[ExportController::class, 'registrationsPdf']);
+    Route::get('/events/{event}/export/registrations/xlsx',[ExportController::class, 'registrationsXlsx']);
+    Route::get('/events/{event}/export/payments/pdf',[ExportController::class, 'paymentsPdf']);
+    Route::get('/events/{event}/export/payments/xlsx',[ExportController::class, 'paymentsXlsx']);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/events', [EventController::class, 'adminIndex']);
-    Route::get('/dashboard', [DashboardController::class, 'admin']);
-});
-
+Route::get('/events/{slug}', [EventController::class, 'show']);
 Route::post('/events/{slug}/register', [RegistrationController::class, 'store']);
-
 Route::get('/payments/{transactionId}', [PaymentController::class, 'show']);
 Route::post('/payments/{transactionId}/simulate-pay', [PaymentController::class, 'simulatePay']);
+Route::get('/tickets/{ticketCode}/download', [ExportController::class, 'downloadTicket']);

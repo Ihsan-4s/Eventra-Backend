@@ -9,7 +9,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RegistrationsExport;
 use App\Models\Payment;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Exports\PaymentsExport;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 
 class ExportController extends Controller
@@ -77,5 +79,26 @@ class ExportController extends Controller
             new PaymentsExport($event->id),
             'Transaksi-' . $event->slug . '.xlsx'
         );
+    }
+
+    public function downloadTicket(string $ticketCode)
+    {
+        $ticket = Ticket::with([
+            'registration.event',
+            'registration.event.category',
+        ])->where('ticket_code', $ticketCode)->firstOrFail();
+
+        // Fetch QR image as base64
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={$ticketCode}";
+        $qrImage = base64_encode(file_get_contents($qrUrl));
+
+        $pdf = Pdf::loadView('exports.ticket', [
+            'ticket'       => $ticket,
+            'registration' => $ticket->registration,
+            'event'        => $ticket->registration->event,
+            'qrCode'       => $qrImage,
+        ]);
+
+        return $pdf->download("ticket-{$ticketCode}.pdf");
     }
 }

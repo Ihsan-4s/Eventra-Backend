@@ -13,10 +13,27 @@ use Illuminate\Http\Request;
 
 class RegistrationController extends Controller
 {
+    public function index(Event $event, Request $request)
+    {
+        if ($event->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $registrations = $event->registrations()
+            ->with('payment')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'registrations' => $registrations
+        ]);
+    }
+
     public function store(Request $request, string $slug)
     {
-        $event = Event::where('slug', $slug)
-            ->where('status', 'published')
+        $event = Event::query()
+            ->where('slug', '=', $slug)
+            ->where('status', '=', 'published')
             ->firstOrFail();
 
         $request->validate([

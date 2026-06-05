@@ -45,12 +45,14 @@ class AuthController extends Controller
             'email' => 'required|string',
             'password' => 'required|string'
         ]);
+
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
         };
+        
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -71,9 +73,9 @@ class AuthController extends Controller
     }
 
     public function profile(Request $request)
-{
-    return response()->json([
-        'user' => $request->user()
-    ]);
-}
+    {
+        return response()->json([
+            'user' => $request->user()
+        ]);
+    }
 }
