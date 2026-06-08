@@ -7,8 +7,7 @@ use App\Models\Payment;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PaymentController extends Controller
 {
@@ -17,8 +16,18 @@ class PaymentController extends Controller
         $payment = Payment::with(['registration.event'])
             ->where('transaction_id', $transactionId)
             ->firstOrFail();
+        $qrCode = null;
+        if ($payment->payment_status === 'unpaid') {
+            $qrContent = 'QRIS-EVENTRA-'.$payment->transaction_id;
+            $qrCode = base64_encode(
+                QrCode::format('svg')->size(300)->generate($qrContent)
+            );
+        }
 
-        return response()->json(['payment' => $payment]);
+        return response()->json([
+            'payment' => $payment,
+            'qr_code' => $qrCode,
+        ]);
     }
 
     public function simulatePay(string $transactionId)
@@ -31,26 +40,22 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Pembayaran sudah berhasil sebelumnya.'], 422);
         }
 
-        DB::transaction(function () use ($payment) {
-            // 1. Update status payment
-            $payment->update(['payment_status' => 'paid']);
-
-            // 2. Update status registrasi
-            $payment->registration->update(['status' => 'confirmed']);
-
-            // 3. Generate tiket otomatis
-            Ticket::create([
+        $ticket = DB::transaction(function () use ($payment) {
+            $payment->update([
+                'payment_status' => 'paid',
+            ]);
+            $payment->registration->update([
+                'status' => 'confirmed',
+            ]);
+            return Ticket::create([
                 'registration_id' => $payment->registration->id,
-                'ticket_code'     => 'TIX-' . strtoupper(Str::random(12)),
-                'qr_code'         => 'https://eventra.com/verify/' . Str::random(12),
+                'ticket_code' => 'TIX-'.strtoupper(Str::random(12)),
+                'qr_code' => 'https://eventra.com/verify/'.Str::random(12),
             ]);
         });
-
-        $ticket = $payment->registration->fresh()->ticket;
-
         return response()->json([
             'message' => 'Pembayaran berhasil. Tiket telah dibuat.',
-            'ticket'  => $ticket,
+            'ticket' => $ticket,
         ]);
     }
 }

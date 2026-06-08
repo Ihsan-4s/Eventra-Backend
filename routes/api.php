@@ -10,9 +10,7 @@ use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\RegistrationController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\ExportController;
-// Route::get('/unauthenticated', function() {
-//     return response()->json(['message' => 'Unauthenticated.'], 401);
-// })->name('login');
+
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,27 +21,27 @@ Route::middleware('auth:sanctum')->group(function(){
 
 // event categories
 Route::get('/categories', [EventCategoryController::class, 'index']);
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+
+// Admin
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/events', [EventController::class, 'adminIndex']);
+    Route::delete('/events/{event}', [EventController::class, 'adminDestroy']);
+    Route::get('/dashboard', [DashboardController::class, 'admin']);
     Route::post('/categories', [EventCategoryController::class, 'store']);
     Route::put('/categories/{eventCategory}', [EventCategoryController::class, 'update']);
     Route::delete('/categories/{eventCategory}', [EventCategoryController::class, 'destroy']);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/events', [EventController::class, 'adminIndex']);
-    Route::get('/dashboard', [DashboardController::class, 'admin']);
-});
-
 
 Route::middleware(['auth:sanctum', 'role:organizer'])->prefix('organizer')->group(function () {
     Route::get('/events', [EventController::class, 'myEvents']);
+    Route::get('/events/{event}/detail', [EventController::class, 'show_organizer']);
     Route::post('/events', [EventController::class, 'store']);
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
     Route::post('/events/{event}/check-in', [AttendanceController::class, 'checkIn']);
     Route::get('/events/{event}/attendances', [AttendanceController::class, 'index']);
     Route::get('/dashboard', [DashboardController::class, 'organizer']);
-    Route::get('/events/{event}/analytics', [DashboardController::class, 'eventAnalytics']);
     Route::get('/events/{event}/registrations', [RegistrationController::class, 'index']);
     Route::get('/events/{event}/export/registrations/pdf',[ExportController::class, 'registrationsPdf']);
     Route::get('/events/{event}/export/registrations/xlsx',[ExportController::class, 'registrationsXlsx']);

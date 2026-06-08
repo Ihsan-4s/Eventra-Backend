@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Payment;
 use App\Models\Registration;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-
 
 class RegistrationController extends Controller
 {
@@ -25,20 +24,19 @@ class RegistrationController extends Controller
             ->get();
 
         return response()->json([
-            'registrations' => $registrations
+            'registrations' => $registrations,
         ]);
     }
 
     public function store(Request $request, string $slug)
     {
-        $event = Event::query()
-            ->where('slug', '=', $slug)
-            ->where('status', '=', 'published')
+        $event = Event::where('slug', $slug)
+            ->where('status', 'published')
             ->firstOrFail();
 
         $request->validate([
-            'full_name'    => 'required|string|max:255',
-            'email'        => 'required|email',
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|email',
             'phone_number' => 'required|string|max:20',
         ]);
 
@@ -52,28 +50,29 @@ class RegistrationController extends Controller
 
         $result = DB::transaction(function () use ($request, $event) {
             $registration = Registration::create([
-                'event_id'=> $event->id,
-                'registration_code' => 'REG-' . strtoupper(Str::random(10)),
-                'full_name'=> $request->full_name,
-                'email'=> $request->email,
-                'phone_number'=> $request->phone_number,
+                'event_id' => $event->id,
+                'registration_code' => 'REG-'.strtoupper(Str::random(10)),
+                'full_name' => $request->full_name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
                 'registration_date' => now(),
-                'status'=> 'pending',
+                'status' => 'pending',
             ]);
 
             $payment = Payment::create([
-                'registration_id'=> $registration->id,
-                'amount'=> $event->price,
-                'transaction_id'=> 'TRX-' . strtoupper(Str::random(12)),
-                'payment_status'=> 'unpaid',
+                'registration_id' => $registration->id,
+                'amount' => $event->price,
+                'transaction_id' => 'TRX-'.strtoupper(Str::random(12)),
+                'payment_status' => 'unpaid',
             ]);
+
             return ['registration' => $registration, 'payment' => $payment];
         });
 
         return response()->json([
-            'message'      => 'Registrasi berhasil. Silakan lakukan pembayaran.',
+            'message' => 'Registrasi berhasil. Silakan lakukan pembayaran.',
             'registration' => $result['registration'],
-            'payment'      => $result['payment'],
+            'payment' => $result['payment'],
         ], 201);
     }
 }

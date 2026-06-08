@@ -17,41 +17,47 @@ class EventController extends Controller
             ->where('slug', $slug)
             ->where('status', 'published')
             ->firstOrFail();
-
         return response()->json(['event' => $event]);
+    }
+
+    public function show_organizer(Event $event, Request $request)
+    {
+        if ($event->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+        return response()->json(['event' => $event->load('category')]);
     }
 
     public function myEvents(Request $request)
     {
+        $perPage = $request->get('per_page', 9);
         $events = Event::with('category')
             ->where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
+            ->paginate($perPage);
         return response()->json($events);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'category_id'       => 'required|exists:event_categories,id',
-            'organization_name' => 'required|string|max:255',
-            'title'             => 'required|string|max:255',
-            'banner'            => 'sometimes|image|mimes:jpg,jpeg,png|max:5120',
-            'description'       => 'required|string',
-            'location'          => 'required|string|max:255',
-            'event_date'        => 'required|date|after:today',
-            'price'             => 'required|numeric|min:0',
-            'quota'             => 'required|integer|min:1',
-            'status'            => 'sometimes|in:draft,published,cancelled',
+            'category_id'=> 'required|exists:event_categories,id',
+            'organization_name'=> 'required|string|max:255',
+            'title'=> 'required|string|max:255',
+            'banner'=> 'sometimes|image|mimes:jpg,jpeg,png|max:5120',
+            'description'=> 'required|string',
+            'location'=> 'required|string|max:255',
+            'event_date'=> 'required|date|after:today',
+            'price'=> 'required|numeric|min:0',
+            'quota'=> 'required|integer|min:1',
+            'status'=> 'sometimes|in:draft,published,cancelled',
         ]);
+
         $bannerPath = null;
         if ($request->hasFile('banner')) {
             $bannerPath = $request->file('banner')->store('banners', 'public');
         }
-
         $slug = Str::slug($request->title);
-
         $event = Event::create([
             'user_id'=> $request->user()->id,
             'category_id'=> $request->category_id,

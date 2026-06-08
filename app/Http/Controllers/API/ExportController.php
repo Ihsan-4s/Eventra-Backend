@@ -74,7 +74,6 @@ class ExportController extends Controller
         if ($event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
-
         return Excel::download(
             new PaymentsExport($event->id),
             'Transaksi-' . $event->slug . '.xlsx'
@@ -88,17 +87,16 @@ class ExportController extends Controller
             'registration.event.category',
         ])->where('ticket_code', $ticketCode)->firstOrFail();
 
-        // Fetch QR image as base64
+        // fetch qr
         $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={$ticketCode}";
         $qrImage = base64_encode(file_get_contents($qrUrl));
 
         $pdf = Pdf::loadView('exports.ticket', [
-            'ticket'       => $ticket,
+            'ticket'=> $ticket,
             'registration' => $ticket->registration,
-            'event'        => $ticket->registration->event,
-            'qrCode'       => $qrImage,
+            'event'=> $ticket->registration->event,
+            'qrCode'=> $qrImage,
         ]);
-
         return $pdf->download("ticket-{$ticketCode}.pdf");
     }
 }

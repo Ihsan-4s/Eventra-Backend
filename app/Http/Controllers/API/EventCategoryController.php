@@ -35,11 +35,9 @@ class EventCategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:100|unique:event_categories,name,' . $eventCategory->id,
         ]);
-
         $eventCategory->update([
             'name' => $request->name
         ]);
-
         return response()->json([
             'message'  => 'Kategori berhasil diperbarui.',
             'category' => $eventCategory
@@ -48,15 +46,13 @@ class EventCategoryController extends Controller
 
     public function destroy(EventCategory $eventCategory)
     {
-        // Cek apakah kategori masih dipakai event
+        // cek category lagi dipake event ga?
         if ($eventCategory->events()->exists()) {
             return response()->json([
                 'message' => 'Kategori tidak dapat dihapus karena masih digunakan event.'
             ], 422);
         }
-
         $eventCategory->delete();
-
         return response()->json([
             'message' => 'Kategori berhasil dihapus.'
         ]);
