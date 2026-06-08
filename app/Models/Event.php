@@ -29,7 +29,6 @@ class Event extends Model
         return [
             'event_date' => 'datetime',
             'price' => 'decimal:2',
-            'status' => 'string',
         ];
     }
 

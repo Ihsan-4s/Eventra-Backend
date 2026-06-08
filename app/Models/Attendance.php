@@ -19,7 +19,6 @@ class Attendance extends Model
     {
         return [
             'check_in_time' => 'datetime',
-            'attendance_status' => 'string',
         ];
     }
 

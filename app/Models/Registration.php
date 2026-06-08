@@ -23,7 +23,6 @@ class Registration extends Model
     {
         return [
             'registration_date' => 'datetime',
-            'status' => 'string'
         ];
     }
 
